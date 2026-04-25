@@ -22,11 +22,13 @@ from .models import (
     ContractEvent,
     ContractInvocation,
     ContractMetadata,
+    ContractVerification,
     Notification,
     TrackedContract,
     WebhookDeliveryLog,
 )
 from .services.timeline import build_timeline
+from ..graphql_extensions import GraphQLResolverLoggingExtension
 
 
 def _get_authenticated_user(info: Info):
@@ -63,7 +65,15 @@ class ContractType:
     deprecation_reason: auto
     event_filter_type: auto
     event_filter_list: strawberry.scalars.JSON
+    metadata: strawberry.scalars.JSON
     created_at: auto
+
+    @strawberry.field
+    def verification_status(self) -> Optional[str]:
+        try:
+            return self.verification.status
+        except ContractVerification.DoesNotExist:
+            return None
 
     @strawberry.field
     def team_id(self) -> Optional[int]:
@@ -835,6 +845,7 @@ class Mutation:
         name: str,
         description: str = "",
         team_id: Optional[int] = None,
+        metadata: Optional[strawberry.scalars.JSON] = None,
     ) -> ContractType:
         """Register a new contract for indexing."""
         user = _get_authenticated_user(info)
@@ -858,6 +869,7 @@ class Mutation:
             description=description,
             owner=user,
             team=team,
+            metadata=metadata or {},
         )
         return contract
 
@@ -962,6 +974,7 @@ class Mutation:
         alias: Optional[str] = None,
         event_filter_type: Optional[str] = None,
         event_filter_list: Optional[list[str]] = None,
+        metadata: Optional[strawberry.scalars.JSON] = None,
     ) -> Optional[ContractType]:
         """Update a tracked contract."""
         user = _get_authenticated_user(info)
@@ -988,6 +1001,8 @@ class Mutation:
             contract.event_filter_type = event_filter_type
         if event_filter_list is not None:
             contract.event_filter_list = event_filter_list
+        if metadata is not None:
+            contract.metadata = metadata
 
         contract.save()
 
@@ -1121,4 +1136,9 @@ class Subscription:
             await channel_layer.group_discard(group_name, channel_name)
 
 
-schema = strawberry.Schema(query=Query, mutation=Mutation, subscription=Subscription)
+schema = strawberry.Schema(
+    query=Query,
+    mutation=Mutation,
+    subscription=Subscription,
+    extensions=[GraphQLResolverLoggingExtension],
+)

@@ -17,17 +17,24 @@ from .models import (
     APIKey,
     ArchivalAuditLog,
     ArchivedEventBatch,
+    AuditLog,
     ContractABI,
+    ContractABIVersion,
+    ContractDeployment,
     ContractEvent,
     ContractMetadata,
     ContractSigningKey,
     ContractQuota,
+    ContractSource,
+    ContractVerification,
+    DataDeletionRequest,
     DataRetentionPolicy,
     EventSchema,
     IndexerState,
     IngestError,
     Organization,
     OrganizationMembership,
+    PIIField,
     RemediationIncident,
     RemediationRule,
     Team,
@@ -167,7 +174,7 @@ class TrackedContractAdmin(AdminAuditMixin, admin.ModelAdmin):
         ("Advanced", {
             "fields": (
                 "deprecation_status", "deprecation_reason",
-                "max_events_per_minute", "abi_schema", "json_schema",
+                "max_events_per_minute", "abi_schema", "json_schema", "metadata",
                 "last_indexed_ledger",
             ),
             "classes": ("collapse",),
@@ -977,3 +984,88 @@ class ContractMetadataAdmin(AdminAuditMixin, admin.ModelAdmin):
     search_fields = ["name", "description", "tags"]
     list_filter = [TagListFilter]
     readonly_fields = ["created_at", "updated_at"]
+
+
+@admin.register(ContractSource)
+class ContractSourceAdmin(AdminAuditMixin, admin.ModelAdmin):
+    list_display = ["contract", "uploaded_by", "uploaded_at", "file_size"]
+    list_filter = ["uploaded_at"]
+    search_fields = ["contract__name", "contract__contract_id", "uploaded_by__username"]
+    readonly_fields = ["uploaded_at"]
+
+    def file_size(self, obj):
+        if obj.source_file:
+            return f"{obj.source_file.size} bytes"
+        return "—"
+    file_size.short_description = "File Size"
+
+
+@admin.register(ContractVerification)
+class ContractVerificationAdmin(AdminAuditMixin, admin.ModelAdmin):
+    list_display = ["contract", "status", "verified_at", "compiler_version"]
+    list_filter = ["status", "verified_at"]
+    search_fields = ["contract__name", "contract__contract_id"]
+    readonly_fields = ["verified_at"]
+
+
+# ---------------------------------------------------------------------------
+# Issue #280: GDPR Data Governance
+# ---------------------------------------------------------------------------
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ["timestamp", "action", "model_name", "object_id", "user", "ip_address"]
+    list_filter = ["action", "model_name", "timestamp"]
+    search_fields = ["object_id", "user__username", "model_name"]
+    readonly_fields = ["timestamp", "action", "model_name", "object_id", "user", "ip_address", "changes"]
+    ordering = ["-timestamp"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PIIField)
+class PIIFieldAdmin(admin.ModelAdmin):
+    list_display = ["contract", "event_type", "field_path", "description", "created_at"]
+    list_filter = ["created_at"]
+    search_fields = ["contract__contract_id", "contract__name", "field_path"]
+    readonly_fields = ["created_at"]
+
+
+@admin.register(DataDeletionRequest)
+class DataDeletionRequestAdmin(admin.ModelAdmin):
+    list_display = ["subject_identifier", "status", "requested_by", "events_deleted", "requested_at", "completed_at"]
+    list_filter = ["status", "requested_at"]
+    search_fields = ["subject_identifier", "requested_by__username"]
+    readonly_fields = ["requested_at", "completed_at", "events_deleted", "error_message"]
+    filter_horizontal = ["contracts"]
+
+
+# ---------------------------------------------------------------------------
+# Issue #284: Contract Deployment Tracking
+# ---------------------------------------------------------------------------
+
+@admin.register(ContractDeployment)
+class ContractDeploymentAdmin(admin.ModelAdmin):
+    list_display = ["contract", "bytecode_hash_short", "ledger_deployed", "deployer_address", "is_upgrade", "detected_at"]
+    list_filter = ["is_upgrade", "detected_at"]
+    search_fields = ["contract__contract_id", "contract__name", "bytecode_hash", "deployer_address"]
+    readonly_fields = ["detected_at"]
+
+    def bytecode_hash_short(self, obj):
+        return obj.bytecode_hash[:16] + "..."
+    bytecode_hash_short.short_description = "Bytecode Hash"
+
+
+@admin.register(ContractABIVersion)
+class ContractABIVersionAdmin(admin.ModelAdmin):
+    list_display = ["contract", "version_number", "valid_from_ledger", "valid_to_ledger", "has_breaking_changes", "created_at"]
+    list_filter = ["has_breaking_changes", "created_at"]
+    search_fields = ["contract__contract_id", "contract__name"]
+    readonly_fields = ["created_at"]
