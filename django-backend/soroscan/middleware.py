@@ -21,10 +21,7 @@ class RequestIdMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        request_id = request.META.get("HTTP_X_REQUEST_ID")
-        if not request_id:
-            request_id = getattr(request, "request_id", None) or str(uuid.uuid4())
-            
+        request_id = request.META.get("HTTP_X_REQUEST_ID") or getattr(request, "request_id", None) or uuid.uuid4().hex
         request.request_id = request_id
         set_request_id(request_id)
         
