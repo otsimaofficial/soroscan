@@ -192,7 +192,7 @@ class TrackedContractAdmin(AdminAuditMixin, admin.ModelAdmin):
     readonly_fields = ["created_at", "updated_at"]
     ordering = ["-created_at", "name"]
     action_form = BackfillActionForm
-    actions = ["backfill_events"]
+    actions = ["backfill_events", "clear_cache"]
     fieldsets = (
         (None, {
             "fields": (
@@ -282,6 +282,22 @@ class TrackedContractAdmin(AdminAuditMixin, admin.ModelAdmin):
                 f"Backfill started for {len(task_ids)} contract(s). Task IDs: {task_ids_text}",
                 level=messages.SUCCESS,
             )
+
+    @admin.action(description="Clear Redis cache for selected contracts")
+    def clear_cache(self, request, queryset):
+        from .cache_utils import invalidate_contract_query_cache, invalidate_event_count_cache
+
+        cleared = 0
+        for contract in queryset:
+            invalidate_contract_query_cache(contract.contract_id)
+            invalidate_event_count_cache(contract.contract_id)
+            cleared += 1
+
+        self.message_user(
+            request,
+            f"Cache cleared for {cleared} contract(s).",
+            level=messages.SUCCESS,
+        )
 
 
 @admin.register(EventSchema)
