@@ -838,6 +838,32 @@ def health_check(request):
 
 @extend_schema(
     responses=inline_serializer(
+        name="NetworkListResponse",
+        fields={
+            "networks": serializers.ListField(
+                child=inline_serializer(
+                    name="NetworkEntry",
+                    fields={
+                        "id": serializers.CharField(),
+                        "name": serializers.CharField(),
+                        "rpc_url": serializers.CharField(),
+                        "network_passphrase": serializers.CharField(),
+                    },
+                )
+            )
+        },
+    )
+)
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def networks_view(request):
+    """Return the list of Soroban networks supported by this indexer."""
+    networks = getattr(settings, "SOROBAN_NETWORKS", [])
+    return Response({"networks": networks})
+
+
+@extend_schema(
+    responses=inline_serializer(
         name="ContractStatusResponse",
         fields={
             "total_contracts": serializers.IntegerField(),

@@ -346,6 +346,29 @@ STELLAR_NETWORK_PASSPHRASE = env(
 SOROSCAN_CONTRACT_ID = env("SOROSCAN_CONTRACT_ID", default="")
 INDEXER_SECRET_KEY = env("INDEXER_SECRET_KEY", default="")
 
+# Available Soroban networks exposed via GET /api/ingest/networks/.
+# Override individual RPC URLs via the corresponding env vars if needed.
+SOROBAN_NETWORKS = [
+    {
+        "id": "testnet",
+        "name": "Testnet",
+        "rpc_url": env("TESTNET_RPC_URL", default="https://soroban-testnet.stellar.org"),
+        "network_passphrase": "Test SDF Network ; September 2015",
+    },
+    {
+        "id": "mainnet",
+        "name": "Mainnet",
+        "rpc_url": env("MAINNET_RPC_URL", default="https://mainnet.stellar.validationcloud.io/v1/public"),
+        "network_passphrase": "Public Global Stellar Network ; September 2015",
+    },
+    {
+        "id": "futurenet",
+        "name": "Futurenet",
+        "rpc_url": env("FUTURENET_RPC_URL", default="https://soroban-futurenet.stellar.org"),
+        "network_passphrase": "Test SDF Future Network ; October 2022",
+    },
+]
+
 # ---------------------------------------------------------------------------
 # GraphQL Introspection (security: disable in production)
 # ---------------------------------------------------------------------------
