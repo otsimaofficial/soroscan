@@ -407,7 +407,7 @@ class TestWebhookPingEndpoint:
     def test_ping_queues_task_and_returns_200(self, authenticated_client, contract):
         webhook = WebhookSubscriptionFactory(contract=contract)
 
-        with patch("soroscan.ingest.views.ping_webhook.delay") as mock_delay:
+        with patch("soroscan.ingest.tasks.ping_webhook.delay") as mock_delay:
             url = reverse("webhook-ping", args=[webhook.id])
             response = authenticated_client.post(url)
             mock_delay.assert_called_once_with(webhook.id)
