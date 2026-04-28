@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 import responses
 from django.contrib.auth import get_user_model
@@ -402,13 +404,13 @@ class TestRecordEventView:
 
 @pytest.mark.django_db
 class TestWebhookPingEndpoint:
-    @responses.activate
     def test_ping_queues_task_and_returns_200(self, authenticated_client, contract):
         webhook = WebhookSubscriptionFactory(contract=contract)
-        responses.add(responses.POST, webhook.target_url, status=200)
 
-        url = reverse("webhook-ping", args=[webhook.id])
-        response = authenticated_client.post(url)
+        with patch("soroscan.ingest.views.ping_webhook.delay") as mock_delay:
+            url = reverse("webhook-ping", args=[webhook.id])
+            response = authenticated_client.post(url)
+            mock_delay.assert_called_once_with(webhook.id)
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["status"] == "ping_queued"

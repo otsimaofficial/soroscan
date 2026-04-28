@@ -4,10 +4,11 @@ Tests for the ping_webhook Celery task (issue #403).
 import json
 
 import pytest
+import requests
 import responses as responses_lib
 
 from soroscan.ingest.tasks import ping_webhook
-from soroscan.ingest.tests.factories import WebhookSubscriptionFactory, TrackedContractFactory
+from soroscan.ingest.tests.factories import TrackedContractFactory, WebhookSubscriptionFactory
 
 
 @pytest.mark.django_db
@@ -71,7 +72,7 @@ class TestPingWebhookTask:
             rsps.add(
                 responses_lib.POST,
                 webhook.target_url,
-                body=ConnectionError("connection refused"),
+                body=requests.exceptions.ConnectionError("connection refused"),
             )
             result = ping_webhook.run(webhook.id)
 
