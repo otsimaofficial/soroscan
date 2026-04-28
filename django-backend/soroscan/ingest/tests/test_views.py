@@ -401,6 +401,37 @@ class TestRecordEventView:
 
 
 @pytest.mark.django_db
+class TestWebhookPingEndpoint:
+    @responses.activate
+    def test_ping_queues_task_and_returns_200(self, authenticated_client, contract):
+        webhook = WebhookSubscriptionFactory(contract=contract)
+        responses.add(responses.POST, webhook.target_url, status=200)
+
+        url = reverse("webhook-ping", args=[webhook.id])
+        response = authenticated_client.post(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["status"] == "ping_queued"
+        assert response.data["webhook_id"] == webhook.id
+
+    def test_ping_returns_404_for_missing_webhook(self, authenticated_client):
+        url = reverse("webhook-ping", args=[999999])
+        response = authenticated_client.post(url)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_ping_requires_authentication(self, api_client, contract):
+        webhook = WebhookSubscriptionFactory(contract=contract)
+        url = reverse("webhook-ping", args=[webhook.id])
+        response = api_client.post(url)
+
+        assert response.status_code in [
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN,
+        ]
+
+
+@pytest.mark.django_db
 class TestHealthCheck:
     def test_health_check(self, api_client):
         url = reverse("health-check")

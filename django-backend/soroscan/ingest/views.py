@@ -591,6 +591,30 @@ class WebhookSubscriptionViewSet(viewsets.ModelViewSet):
         return Response({"status": "test_webhook_queued"})
 
     @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="PingWebhookResponse",
+                fields={
+                    "status": serializers.CharField(),
+                    "webhook_id": serializers.IntegerField(),
+                },
+            )
+        },
+    )
+    @action(detail=True, methods=["post"])
+    def ping(self, request, pk=None):
+        """
+        Dispatch a background task that sends a test ping payload to the webhook
+        endpoint.  The task logs whether the target responded with HTTP 200.
+        """
+        from .tasks import ping_webhook
+
+        webhook = self.get_object()
+        ping_webhook.delay(webhook.id)
+        return Response({"status": "ping_queued", "webhook_id": webhook.id})
+
+    @extend_schema(
         request=inline_serializer(
             name="WebhookConditionDryRunRequest",
             fields={
