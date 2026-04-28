@@ -4,6 +4,8 @@ title: Rate Limits
 sidebar_label: Rate Limits
 ---
 
+import RateLimitWidget from '@site/src/components/RateLimitWidget';
+
 SoroScan enforces rate limits to ensure fair usage and platform stability. This page explains the limits and how to monitor your usage.
 
 ## Default Limits
@@ -95,6 +97,8 @@ Build dashboards around these metrics:
 - `seconds_to_reset = X-RateLimit-Reset - now`
 
 Track these over time to alert before saturation and plan scale-up.
+
+<RateLimitWidget />
 
 ## Handling 429 Responses
 

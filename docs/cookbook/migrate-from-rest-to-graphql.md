@@ -1,42 +1,39 @@
 # Migrate from REST to GraphQL
 
-Use this guide when your integration outgrows endpoint-by-endpoint REST fetching.
+## Goal
+Transition a data-fetching workflow from making multiple REST API calls to a single GraphQL query for improved efficiency.
 
-## When to Migrate
+## Prerequisites
+- Existing REST implementation.
+- Basic understanding of GraphQL schemas.
 
-- You need nested data in a single request.
-- You want tighter payload control.
-- You are joining contract + events + transaction metadata.
+## Code
+**Old REST Approach:**
+```typescript
+// 1. Fetch Contract
+const contract = await client.getContract("CCAAA...");
+// 2. Fetch Stats
+const stats = await client.getContractStats("CCAAA...");
+// 3. Fetch Events
+const events = await client.getEvents({ contractId: "CCAAA..." });
+```
 
-## Mapping Strategy
-
-1. Start from your current REST response shape.
-2. Build an equivalent GraphQL query with only needed fields.
-3. Move one feature area at a time (read paths first).
-
-## Example
-
-REST flow:
-
-- `GET /contracts/{id}/`
-- `GET /contracts/{id}/events/`
-
-GraphQL replacement:
-
+**New GraphQL Approach:**
 ```graphql
-query ContractWithEvents($id: String!) {
-  contract(id: $id) {
+query MigrateRestToGql {
+  contract(id: "CCAAA...") {
     id
     name
-    events(first: 25) {
-      edges {
-        node {
-          eventType
-          txHash
-          ledger
-        }
-      }
+    stats { totalEvents }
+    events(first: 50) {
+      edges { node { ledger type } }
     }
   }
 }
 ```
+
+## Expected Output
+Both approaches yield the same data, but the GraphQL approach requires exactly 1 network roundtrip instead of 3, drastically reducing latency on mobile networks.
+
+## Error Handling
+GraphQL structural errors are returned in an `errors` array in the response body. If you misspell a field, the server will tell you the valid fields available on that type.

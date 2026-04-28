@@ -1,6 +1,20 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
+import apiSidebar from '../docs/api-reference/sidebar';
 
 const sidebars: SidebarsConfig = {
+  apiSidebar: [
+    {
+      type: 'category',
+      label: 'API Reference',
+      link: {
+        type: 'generated-index',
+        title: 'API Reference',
+        description: 'SoroScan API endpoints',
+        slug: '/category/api'
+      },
+      items: apiSidebar,
+    }
+  ],
   tutorialSidebar: [
     'getting-started',
     'api-overview',

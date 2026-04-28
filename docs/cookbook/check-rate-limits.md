@@ -1,23 +1,32 @@
 # Check Rate Limits
 
-Inspect rate limit headers to understand current usage vs limit.
+## Goal
+Inspect rate limit headers or query the rate limit API to understand current usage vs limit.
 
-## cURL Example
+## Prerequisites
+- A valid SoroScan API key.
 
-```bash
-curl -i "https://api.soroscan.io/api/ingest/contracts/" \
-  -H "Authorization: Bearer YOUR_API_KEY"
+## Code
+```typescript
+import { SoroScanClient } from '@soroscan/sdk';
+
+const client = new SoroScanClient({ apiKey: 'your_api_key' });
+
+// Making any request will return rate limit headers
+const response = await fetch("https://api.soroscan.io/api/ingest/contracts/", {
+  headers: { "Authorization": "Bearer your_api_key" }
+});
+
+const limit = response.headers.get("X-RateLimit-Limit");
+const remaining = response.headers.get("X-RateLimit-Remaining");
+
+console.log(`Rate Limit: ${remaining} / ${limit} remaining`);
 ```
 
-Look for:
-
-- `X-RateLimit-Limit`
-- `X-RateLimit-Remaining`
-- `X-RateLimit-Reset`
-
-## Usage Formula
-
+## Expected Output
 ```text
-usage = X-RateLimit-Limit - X-RateLimit-Remaining
-usage_percent = usage / X-RateLimit-Limit * 100
+Rate Limit: 995 / 1000 remaining
 ```
+
+## Error Handling
+When `remaining` hits `0`, the API will return a `429 Too Many Requests`. You should parse the `Retry-After` or `X-RateLimit-Reset` headers to determine when to resume requests.

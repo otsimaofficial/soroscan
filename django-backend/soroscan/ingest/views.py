@@ -1323,7 +1323,7 @@ def deletion_requests_view(request):
 @permission_classes([IsAuthenticated])
 def compliance_export_view(request):
     """
-    GET /api/compliance-export/?from=<iso>&to=<iso>
+    GET /api/compliance-export/?from={iso}&to={iso}
     Returns a CSV audit trail of AuditLog entries for compliance auditors.
     Staff only.
     """

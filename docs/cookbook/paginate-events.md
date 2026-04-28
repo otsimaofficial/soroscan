@@ -1,35 +1,34 @@
 # Paginate Events
 
-Use cursor-based pagination to process large event streams safely.
+## Goal
+Extract large amounts of event data systematically by paginating through historical events using cursors or offsets.
 
-## TypeScript
+## Prerequisites
+- SoroScan SDK installed
+- Contract is registered and active
 
-```typescript
-import { SoroScanClient } from "@soroscan/sdk";
-
-const client = new SoroScanClient({ baseUrl: "https://api.soroscan.io" });
-
-let after: string | null = null;
-do {
-  const page = await client.getEvents({ contractId: "CCAAA...", first: 100, after });
-  page.items.forEach((event) => console.log(event.id));
-  after = page.pageInfo?.hasNextPage ? page.pageInfo.endCursor : null;
-} while (after);
-```
-
-## Python
-
+## Code
 ```python
 from soroscan import SoroScanClient
 
-client = SoroScanClient(base_url="https://api.soroscan.io")
-cursor = None
+client = SoroScanClient(api_key='your_api_key')
+page = 1
+all_events = []
 
 while True:
-    page = client.get_events(contract_id="CCAAA...", first=100, after=cursor)
-    for event in page.items:
-        print(event.id)
-    if not page.page_info.has_next_page:
+    res = client.search_events(contract_id='CCAAA...', page=page, page_size=100)
+    if not res['results']:
         break
-    cursor = page.page_info.end_cursor
+    all_events.extend(res['results'])
+    page += 1
+
+print(f"Retrieved {len(all_events)} total events.")
 ```
+
+## Expected Output
+```text
+Retrieved 342 total events.
+```
+
+## Error Handling
+Implement rate limit handling. SoroScan enforces rate limits; if you receive a `429 Too Many Requests`, pause the script using `time.sleep()` before retrying the same page.

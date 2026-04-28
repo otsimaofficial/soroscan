@@ -1,26 +1,35 @@
-# Filter by Event Type
+# Filter By Event Type
 
-Filter indexed events server-side to reduce payload size and improve latency.
+## Goal
+Retrieve all events of a specific type (e.g., `transfer` or `mint`) emitted by a contract.
 
-## REST
+## Prerequisites
+- SoroScan SDK installed
+- Contract is registered and active
 
-```bash
-curl "https://api.soroscan.io/api/ingest/events/?contract=CCAAA...&event_type=transfer" \
-  -H "Authorization: Bearer YOUR_API_KEY"
-```
-
-## Python
-
-```python
-events = client.get_events(contract_id="CCAAA...", event_type="transfer", first=50)
-```
-
-## TypeScript
-
+## Code
 ```typescript
+import { SoroScanClient } from '@soroscan/sdk';
+
+const client = new SoroScanClient({ apiKey: 'your_api_key' });
 const events = await client.getEvents({
-  contractId: "CCAAA...",
-  eventType: "transfer",
-  first: 50,
+  contractId: 'CCAAA...',
+  eventType: 'transfer',
+  first: 50
 });
+console.log(events.items);
 ```
+
+## Expected Output
+```json
+[
+  {
+    "event_type": "transfer",
+    "ledger": 123456,
+    "payload": { "from": "GAAA...", "to": "GBBB...", "amount": "100" }
+  }
+]
+```
+
+## Error Handling
+If no events match the type, an empty array is returned. If the contract is not found, a `404 Not Found` is thrown.

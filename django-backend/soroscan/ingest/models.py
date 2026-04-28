@@ -261,7 +261,7 @@ class TrackedContract(models.Model):
         db_index=True,
         help_text="Stellar contract address (C...)",
     )
-    name = models.CharField(max_length=100, help_text="Human-readable contract name")
+    name = models.CharField(max_length=100, db_index=True, help_text="Human-readable contract name")
     alias = models.CharField(
         max_length=256,
         blank=True,
@@ -371,7 +371,7 @@ class TrackedContract(models.Model):
         help_text="Custom attributes for storing contract metadata (team, owner, cost center, etc.)",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

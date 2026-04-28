@@ -30,6 +30,7 @@ const config: Config = {
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/SoroScan/soroscan/tree/main/docs/',
+          docItemComponent: '@theme/ApiItem',
         },
         blog: false,
         theme: {
@@ -38,6 +39,27 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
+
+  plugins: [
+    [
+      'docusaurus-plugin-openapi-docs',
+      {
+        id: 'api', // plugin id
+        docsPluginId: 'classic', // configured for preset-classic
+        config: {
+          soroscan: {
+            specPath: 'openapi.json',
+            outputDir: '../docs/api-reference',
+            sidebarOptions: {
+              groupPathsBy: 'tag',
+            },
+          },
+        },
+      },
+    ],
+  ],
+
+  themes: ['docusaurus-theme-openapi-docs'],
 
   themeConfig: {
     colorMode: {
@@ -59,7 +81,7 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          to: '/api-explorer',
+          to: '/category/api',
           label: 'API Explorer',
           position: 'left',
         },

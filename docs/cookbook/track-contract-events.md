@@ -1,40 +1,35 @@
 # Track Contract Events
 
-Use this recipe to monitor events emitted by a single Soroban contract.
-
 ## Goal
+Register a Soroban smart contract with SoroScan to begin indexing its events automatically and tracking them.
 
-Track `transfer` and `mint` events for one contract and process them in your app.
+## Prerequisites
+- SoroScan SDK installed
+- A valid SoroScan API key
+- A valid Soroban contract ID (starting with `C`)
 
-## Python
-
+## Code
 ```python
 from soroscan import SoroScanClient
 
-client = SoroScanClient(base_url="https://api.soroscan.io", api_key="your-api-key")
-
-events = client.get_events(contract_id="CCAAA...", event_type="transfer", first=25)
-for event in events.items:
-    print(event.ledger, event.event_type, event.tx_hash)
+client = SoroScanClient(api_key='your_api_key')
+contract = client.register_contract(
+    contract_id='CCAAA...', 
+    name='MyToken',
+    alias='my-token-1'
+)
+print(f'Tracking {contract.name}...')
 ```
 
-## TypeScript
-
-```typescript
-import { SoroScanClient } from "@soroscan/sdk";
-
-const client = new SoroScanClient({
-  baseUrl: "https://api.soroscan.io",
-  apiKey: "your-api-key",
-});
-
-const events = await client.getEvents({
-  contractId: "CCAAA...",
-  eventType: "transfer",
-  first: 25,
-});
-
-events.items.forEach((event) => {
-  console.log(event.ledger, event.eventType, event.txHash);
-});
+## Expected Output
+```json
+{
+  "id": 1,
+  "contract_id": "CCAAA...",
+  "name": "MyToken",
+  "is_active": true
+}
 ```
+
+## Error Handling
+If the `contract_id` is invalid or already registered, the API will return a `400 Bad Request`. Handle this using a `try-except` block or by checking the response status.

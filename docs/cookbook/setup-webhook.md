@@ -1,28 +1,34 @@
 # Setup Webhook
 
-Use this recipe to receive push notifications whenever new events are indexed.
+## Goal
+Register a webhook endpoint to receive HTTP POST requests whenever a contract emits a specific event.
 
-## Create a Webhook
+## Prerequisites
+- A publicly accessible HTTP endpoint to receive POST requests.
+- SoroScan API key.
 
-```bash
-curl -X POST "https://api.soroscan.io/api/ingest/webhooks/" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://your-app.com/webhooks/soroscan",
-    "triggers": ["event.created"],
-    "contract_id": "CCAAA...",
-    "secret": "replace-with-random-secret"
-  }'
+## Code
+```typescript
+import { SoroScanClient } from '@soroscan/sdk';
+
+const client = new SoroScanClient({ apiKey: 'your_api_key' });
+const webhook = await client.createWebhook({
+  target_url: 'https://myapp.com/webhooks/soroban',
+  contract_id: 'CCAAA...',
+  event_types: ['transfer', 'mint']
+});
+console.log(`Webhook created! Secret: ${webhook.secret}`);
 ```
 
-## Verify Signature (Node.js)
-
-```javascript
-import crypto from "crypto";
-
-export function verifySoroScanSignature(rawBody, signature, secret) {
-  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
-  return signature === expected;
+## Expected Output
+```json
+{
+  "id": 12,
+  "target_url": "https://myapp.com/webhooks/soroban",
+  "secret": "wh_sec_xyz123...",
+  "status": "active"
 }
 ```
+
+## Error Handling
+Ensure your `target_url` responds with a `200 OK` within 5 seconds, otherwise the delivery will be marked as failed and eventually disabled after multiple retries.

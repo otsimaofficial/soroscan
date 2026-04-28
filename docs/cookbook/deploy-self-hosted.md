@@ -1,17 +1,41 @@
-# Deploy Self-Hosted
+# Deploy Self Hosted
 
-Run SoroScan in your own environment for full control and private workloads.
+## Goal
+Deploy your own instance of the SoroScan indexer and API using Docker Compose for local development or production.
 
-## Quick Path
+## Prerequisites
+- Docker and Docker Compose installed.
+- Access to a Stellar/Soroban RPC URL.
 
-Start with Docker Compose:
+## Code
+```yaml
+# docker-compose.yml excerpt
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: soroscan
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+  backend:
+    build: ./django-backend
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/soroscan
+      - SOROBAN_RPC_URL=https://soroban-rpc.stellar.org
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+```
+Run `docker-compose up -d` to start the stack.
 
-- See [Docker Compose Deployment](../deployment/docker-compose.md)
-- Then scale with [Kubernetes Deployment](../deployment/kubernetes.md)
+## Expected Output
+```text
+Creating network "soroscan_default"
+Creating db ... done
+Creating backend ... done
+```
 
-## Production Checklist
-
-- Configure persistent Postgres and Redis volumes.
-- Put API behind TLS and an ingress controller.
-- Set alerting for worker lag and API error rates.
-- Back up database snapshots on a schedule.
+## Error Handling
+If the backend fails to start, ensure that the database has fully initialized and that `python manage.py migrate` has been run. Check the container logs `docker logs <container_name>` for tracebacks.

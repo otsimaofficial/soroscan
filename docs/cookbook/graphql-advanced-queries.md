@@ -1,30 +1,61 @@
 # GraphQL Advanced Queries
 
-GraphQL helps you fetch nested contract and event data in one round trip.
+## Goal
+Use GraphQL to fetch specifically shaped data, combining events and contract details in a single request.
 
-## Query Events with Contract Metadata
+## Prerequisites
+- An HTTP client or GraphQL client (like Apollo).
+- A valid SoroScan API key.
 
-```graphql
-query ContractEvents($id: String!, $first: Int!) {
-  contract(id: $id) {
-    id
-    name
-    events(first: $first) {
-      edges {
-        node {
-          eventType
-          ledger
-          txHash
-          data
+## Code
+```typescript
+const query = `
+  query GetContractWithEvents($id: String!) {
+    contract(id: $id) {
+      name
+      stats {
+        totalEvents
+      }
+      events(first: 5) {
+        edges {
+          node {
+            type
+            ledger
+          }
         }
+      }
+    }
+  }
+`;
+
+const res = await fetch("https://api.soroscan.io/graphql/", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your_api_key"
+  },
+  body: JSON.stringify({ query, variables: { id: "CCAAA..." } })
+});
+const data = await res.json();
+console.log(data);
+```
+
+## Expected Output
+```json
+{
+  "data": {
+    "contract": {
+      "name": "MyToken",
+      "stats": { "totalEvents": 1200 },
+      "events": {
+        "edges": [
+          { "node": { "type": "transfer", "ledger": 123456 } }
+        ]
       }
     }
   }
 }
 ```
 
-## Tips
-
-- Request only the fields you need.
-- Use variables to keep queries reusable.
-- Add pagination arguments (`first`, `after`) for large datasets.
+## Error Handling
+If a query is malformed, GraphQL returns a `200 OK` status with an `errors` array in the JSON response. Always check `if (data.errors)` before using the data.

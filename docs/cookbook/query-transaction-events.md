@@ -1,17 +1,34 @@
 # Query Transaction Events
 
-Use the transaction endpoint to fetch all contract events emitted in one transaction.
+## Goal
+Find all events or invocations initiated by a specific Stellar account (caller/sender).
 
-## REST
+## Prerequisites
+- SoroScan SDK installed
+- The caller's public key (starting with `G`)
 
-```bash
-curl "https://api.soroscan.io/api/ingest/transactions/YOUR_TX_HASH/" \
-  -H "Authorization: Bearer YOUR_API_KEY"
+## Code
+```python
+from soroscan import SoroScanClient
+
+client = SoroScanClient(api_key='your_api_key')
+invocations = client.get_invocations(
+    caller='GAAA...',
+    include_events=True
+)
+print(f"Found {len(invocations)} invocations.")
 ```
 
-## TypeScript
-
-```typescript
-const txEvents = await client.getTransactionEvents({ txId: "YOUR_TX_HASH" });
-console.log(txEvents);
+## Expected Output
+```json
+[
+  {
+    "caller": "GAAA...",
+    "function_name": "swap",
+    "ledger_sequence": 123456
+  }
+]
 ```
+
+## Error Handling
+Malformed caller addresses will result in a validation error (`400 Bad Request`). Use `try-except` to catch `ValidationError`.
